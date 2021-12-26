@@ -8,8 +8,4 @@
 ## X-Type: Library
 ## X-DependsOn: LibStub
 
-LibColor-1.lua
-
-#@alpha@
-test\Test.lua
-#@end-alpha@
+LibColor.lua
