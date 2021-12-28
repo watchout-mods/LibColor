@@ -92,12 +92,12 @@ local getColor, blendColor, createColorBlender;
 local isColorTable, isColorList, isColorName, isColor;
 local tostringall, strjoin = tostringall, strjoin;
 
-local function liberr(f, ...)
-	error(MAJOR..":", ...);
+local function liberr(message, ...)
+	error(MAJOR .. ": " .. message, ...);
 end
 
 local function argerr(f, argnum, expect, got)
-	liberr(("Bad argument #%s to `%s' (%s expected, got %s)"):format(argnum, f, expect, got));
+	liberr(("Bad argument #%s to %s (%s expected, got '%s')"):format(argnum, f, expect, got));
 end
 
 ---
@@ -333,15 +333,15 @@ end
 -- @return r, g, b, a values
 function Lib:ModifyLuminosity_old(value, ...)
 	if type(value) ~= "number" then
-		argerr("ModifyLuminosity", " argument 1 (value) must be a number from 0 to 1. But is: "..tostring(pos));
+		argerr("ModifyLuminosity_old", 1, "number from 0 to 1", tostring(value));
 	end
 	local r,g,b,a = getColor(self, ...);
 	local low, high = min(r,g,b), max(r,g,b);
 	local lum = (low+high)/2;
 	if value > lum then
-		return blendColor(self, {r,g,b,a}, {getColor("WHITE", a)}, (1-value)/(value-lum));
+		return blendColor(self, {r,g,b,a}, {getColor(self, "WHITE", a)}, (1-value)/(value-lum));
 	else
-		return blendColor(self, {getColor("BLACK", a)}, {r,g,b,a}, lum/(lum-value));
+		return blendColor(self, {getColor(self, "BLACK", a)}, {r,g,b,a}, lum/(lum-value));
 	end
 end
 
@@ -350,13 +350,9 @@ end
 -- 
 -- NYT
 --
--- @param value Number<0..1> Where 0 means black and 1 means white.
 -- @param ... any value that can be passed to :GetColor(...)
 -- @return r, g, b, a values
-function Lib:GetLuminosity(value, ...)
-	if type(value) ~= "number" then
-		argerr("GetLuminosity", " argument 1 (value) must be a number from 0 to 1. But is: "..tostring(pos));
-	end
+function Lib:GetLuminosity(...)
 	local r, g, b, a = getColor(self, ...);
 	local hi, lo = max(r, g, b), min(r, g, b);
 
@@ -373,10 +369,8 @@ end
 -- @param ... any value that can be passed to :GetColor(...)
 -- @return r, g, b, a values
 function Lib:ModifyLuminosity(factor, ...)
-	if type(factor) ~= "number" then
-		argerr("ModifyLuminosity", " argument 1 (factor) must be a number from 0 to 1. But is: "..tostring(pos));
-	elseif factor < 0 then
-		argerr("ModifyLuminosity", " argument 1 (factor) must be a number from 0 to 1. But is: "..tostring(pos));
+	if type(factor) ~= "number" or factor < 0 then
+		argerr("ModifyLuminosity", 1, "positive number or zero", tostring(factor));
 	end
 	local h,s,l,a = self.RGBtoHSL(getColor(self, ...));
 	return self.HSLtoRGB(h, s, max(1, l * factor), a);
@@ -392,7 +386,7 @@ end
 -- @return r, g, b, a values
 function Lib:SetLuminosity(value, ...)
 	if type(value) ~= "number" then
-		argerr("ModifyLuminosity", " argument 1 (value) must be a number from 0 to 1. But is: "..tostring(pos));
+		argerr("SetLuminosity", 1, "number from 0 to 1", tostring(value));
 	end
 	local h,s,l,a = self.RGBtoHSL(getColor(self, ...));
 	return self.HSLtoRGB(h, s, value, a);
