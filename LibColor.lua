@@ -1,4 +1,4 @@
-local MAJOR, MINOR = "LibColor-2", 1;
+local MAJOR, MINOR = "LibColor-2", 2;
 local Lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
 if not Lib then return; end
 ---
@@ -83,9 +83,6 @@ do -- mix in colors from RAID_CLASS_COLORS
 end
 
 -- mix color constants into the Lib
-for k,v in pairs(ColorStrings) do
-	Lib[k] = v;
-end
 Lib.Colors = ColorStrings;
 
 local getColor, blendColor, createColorBlender;
@@ -569,14 +566,15 @@ Lib.IsBlizColorTable = isBlizColorTable;
 do -- Embedding
 	Lib.MixinTargets = Lib.MixinTargets or {};
 	local mixins = {
-		"GetColor", "BlendColor", "CreateColorBlender", "ModifyLuminosity",
-		"IsColor", "IsColorTable", "IsBlizColorTable", "IsColorList", "IsColorName",
-		"GetColorForText",
+		"GetColor", "BlendColor", "CreateColorBlender", "Desaturate", "GetColorForText",
+		"GetLuminosity", "HSLtoRGB", "HSVtoRGB", "IsBlizColorTable", "IsColor", "IsColorList",
+		"IsColorName", "IsColorTable", "ModifyLuminosity", "RGBtoHSL", "RGBtoHSV", "SetLuminosity",
+		"TrimValue",
 		"Colors", -- contains color constants
 	};
 
 	function Lib:Embed(target)
-		for _,name in pairs(mixins) do
+		for _, name in pairs(mixins) do
 			target[name] = Lib[name];
 		end
 		self.MixinTargets[target] = true;
@@ -584,7 +582,7 @@ do -- Embedding
 
 	-- re-embed (if old lib was loaded first)
 	if oldminor and MINOR > oldminor then
-		for target,_ in pairs(Lib.MixinTargets) do
+		for target, _ in pairs(Lib.MixinTargets) do
 			Lib:Embed(target);
 		end
 	end
