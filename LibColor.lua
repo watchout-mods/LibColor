@@ -106,7 +106,7 @@ end
 -- Blizzard color tables are of the form:
 --     { r = <0..1>, g = <0..1>, b = <0..1>[, a = <0..1>]}
 -- 
--- @returns true if the given table is a valid Blizzard color table, false
+-- @return true if the given table is a valid Blizzard color table, false
 -- otherwise.
 local function isBlizColorTable(tbl)
 	if not tbl or type(tbl)~="table" or not tbl.r or not tbl.g or not tbl.b then
@@ -117,19 +117,28 @@ local function isBlizColorTable(tbl)
 end
 
 ---
--- r,g,b,a = Lib:GetColor(String [, Alpha])
--- r,g,b,a = Lib:GetColor(ColorTable) (See Lib:isColorTable())
--- r,g,b,a = Lib:GetColor(Red, Green, Blue[, Alpha])
---
 -- Returns Red, Green, Blue and Alpha values from various input types.
+-- 
+-- <ul>
+--     <li><tt>r,g,b,a = Lib:GetColor(String [, Alpha])</tt> (See Lib.IsColorName(...))</li>
+--     <li><tt>r,g,b,a = Lib:GetColor(ColorTable)</tt> (See Lib.IsColorTable(...))</li>
+--     <li><tt>r,g,b,a = Lib:GetColor(Red, Green, Blue[, Alpha])</tt> (See Lib:IsColorList(...))</li>
+-- </ul>
 -- Possible input types are:
---   ;String: any string that equals an available color constant. An optional
---            alpha value may be added.
---   ;Table:  as by convention of :isColorTable function
---   ;List:   a list of three or four real number values directly as arguments
---            to this function
---
+-- <dl>
+--   <dt>String</dt><dd>any string that equals an available color constant. An
+--       optional alpha value may be added.</dd>
+--   <dt>Table</dt><dd>as by convention of :isColorTable function</dd>
+--   <dt>List</dt><dd>a list of three or four real number values directly as
+--       arguments to this function</dd>
+-- </dl>
+-- 
 -- Color tables contain four numerically indexed items for values R, G, B, A
+-- 
+-- @param c (r) color name, table or red color channel value of a color.
+-- @param g     green color channel value (if c is a red value)
+-- @param b     blue color channel value (if c is a red value)
+-- @param a     alpha channel value (if c is a red value)
 function Lib.GetColor(c, ...)
 	--print(MAJOR, c, ...);
 	local input_t = type(c);
@@ -161,7 +170,8 @@ function Lib.GetColor(c, ...)
 end
 
 ---
--- Trims a value to the range 0..1
+-- Trims a value to the range <tt>0..1</tt>.
+-- 
 -- @param v the value to trim
 -- @return if the value is in the range <0..1>,  or nil,  it will return exactly 
 -- that value.  If the value is `< 0` it will return `0`,  if the value is `> 1` 
@@ -178,8 +188,8 @@ function Lib.TrimValue(v)
 end
 
 ---
--- boolean = Lib:IsColorName(Name)
 -- Returns whether the given name represents a valid color.
+--
 -- No color names containing special characters like accents, umlauts, etc. are
 -- planned.
 -- Color names contain only UPPER CASE characters A-Z, the character "_" or
@@ -193,8 +203,8 @@ function Lib.IsColorName(name)
 end
 
 ---
--- boolean = Lib:IsColorList(Red, Green, Blue[, Alpha])
 -- Returns whether the given values represent a valid color list.
+--
 -- Alpha is optional and thus may be a number from 0 to 1 or false or nil.
 function Lib.IsColorList(R, G, B, A)
 	if (type(R) ~= "number") or (R*0~=0) or (R < 0) or (R > 1) then return false; end
@@ -206,7 +216,6 @@ function Lib.IsColorList(R, G, B, A)
 end
 
 ---
--- boolean = Lib:IsColorTable(Mixed | Table)
 -- Returns whether the given value/table is a valid color table.
 --
 -- Color tables contain three or four numerically indexed items for values
@@ -227,23 +236,23 @@ end
 
 ---
 -- Returns whether the given value describes a color in any possible form.
+--
 -- @param ... any value
 -- @return **true** if the given parameters can be interpreted as one of the
--- color types, **false** otherwise.
+--         color types, **false** otherwise.
 function Lib.IsColor(...)
 	return isColorList(...) or isColorTable(...) or isColorName(...);
 end
 
 ---
--- r,g,b,a = Lib:BlendColor(from, to, frac)
--- Blends between two colors and returns the blended color
+-- Blends between two colors and returns the blended color.
 --
--- @param from Color starting color
--- @param to   Color end color
--- @param frac Number may be any number from 0 to 1. 0 will return exactly the
---             "from" color, 1 will return exactly the color "to", numbers in
---             between are blended proportionally.
--- @returns List style color (Red, Green, Blue, Alpha)
+-- @param col_from Color starting color
+-- @param col_to   Color end color
+-- @param pos      Number may be any number from 0 to 1. 0 will return exactly
+--                 the "from" color, 1 will return exactly the color "to",
+--                 numbers in between are blended proportionally.
+-- @return List style color (Red, Green, Blue, Alpha)
 function Lib.BlendColor(col_from, col_to, pos)
 	local cfr, cfg, cfb, cfa = getColor(col_from);
 	local ctr, ctg, ctb, cta = getColor(col_to);
@@ -260,12 +269,11 @@ function Lib.BlendColor(col_from, col_to, pos)
 end
 
 ---
--- blender = Lib:createColorBlender(from, to)
--- Blends between two colors and returns the blended color
+-- Creates a function that blends between two colors using a linear blending.
 --
--- @param from Color starting color
--- @param to   Color end color
--- @returns function (r,g,b,a = blender(frac))
+-- @param col_from Color starting color
+-- @param col_to   Color end color
+-- @return function (r,g,b,a = blender(frac))
 function Lib.CreateColorBlender(col_from, col_to)
 	local cfr, cfg, cfb, cfa = getColor(col_from);
 	local ctr, ctg, ctb, cta = getColor(col_to);
@@ -274,13 +282,12 @@ function Lib.CreateColorBlender(col_from, col_to)
 		error(MAJOR..":createColorBlender(...) one of arguments <1,2> is not a color.");
 	end
 	---
-	-- r,g,b,a = blend(frac)
-	-- Blends between two colors and returns the blended color
-	-- @param frac Number<0..1> `0` will return exactly the "from" color supplied
-	--             to CreateColorBlender(...) and `1` will return exactly the
-	--             color "to". Numbers in between are blended proportionally.
-	--             
-	-- @returns List style color (Red, Green, Blue, Alpha)
+	-- Blends between two colors and returns the blended color.
+	--
+	-- @param pos Number<0..1> `0` will return exactly the "from" color supplied
+	--            to CreateColorBlender(...) and `1` will return exactly the
+	--            color "to". Numbers in between are blended proportionally.
+	-- @return List style color (Red, Green, Blue, Alpha)
 	local function blend(pos)
 		if not pos or type(pos) ~= "number" then
 			error(MAJOR.."::ColorBlender(...) argument 1 (pos) must be a number from 0 to 1. But is: "..tostring(pos));
@@ -308,13 +315,14 @@ end
 
 ---
 -- Naiive function to modify the luminosity of a color using linear blending.
+--
 -- The function should not be assumed to be anywhere near correct HSL conversion
 -- but rather "Quick and dirty".
 -- 
 -- NYT
 --
 -- @param value Number<0..1> Where 0 means black and 1 means white.
--- @param ... any value that can be passed to :GetColor(...)
+-- @param ...   any value that can be passed to :GetColor(...)
 -- @return r, g, b, a values
 function Lib.ModifyLuminosity_old(value, ...)
 	if type(value) ~= "number" then
@@ -397,16 +405,17 @@ end
 
 ---
 -- Converts an RGB color value to HSL.
+-- 
 -- Conversion formula adapted from http://en.wikipedia.org/wiki/HSL_color_space.
 -- Ported from http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
 --
 -- This function was not tested yet!
 --
--- @param   r  Number<0..1>  The red color value
--- @param   g  Number<0..1>  The green color value
--- @param   b  Number<0..1>  The blue color value
--- @param   a  Number<0..1>  The alpha value
--- @return  h, s, l, a       The HSL representation
+-- @param r <tt>Number<0..1></tt> The red color value
+-- @param g <tt>Number<0..1></tt> The green color value
+-- @param b <tt>Number<0..1></tt> The blue color value
+-- @param a <tt>Number<0..1></tt> The alpha value
+-- @return <tt>(h, s, l, a)</tt> The HSL representation
 --
 function Lib.RGBtoHSL(r, g, b, a)
 	local hi, lo = max(r, g, b), min(r, g, b);
@@ -432,17 +441,18 @@ function Lib.RGBtoHSL(r, g, b, a)
 end
 
 ---
--- Converts an HSL color value to RGB. Conversion formula
--- adapted from http://en.wikipedia.org/wiki/HSL_color_space. And ported from
--- http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
+-- Converts an HSL color value to RGB.
+--
+-- Conversion formula adapted from http://en.wikipedia.org/wiki/HSL_color_space
+-- . And ported from http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
 --
 -- This function was not tested yet!
 --
--- @param   h  Number<0..1>  The hue value
--- @param   s  Number<0..1>  The saturation value
--- @param   l  Number<0..1>  The lightness value
--- @param   a  Number<0..1>  The alpha value
--- @return  r, g, b, a       The RGB representation
+-- @param h <tt>Number<0..1></tt> The hue value
+-- @param s <tt>Number<0..1></tt> The saturation value
+-- @param l <tt>Number<0..1></tt> The lightness value
+-- @param a <tt>Number<0..1></tt> The alpha value
+-- @return <tt>(r, g, b, a)</tt> The RGB representation
 --
 function Lib.HSLtoRGB(h, s, l, a)
 	local r, g, b = l, l, l;
@@ -480,10 +490,11 @@ end
 --
 -- This function was not tested yet!
 --
--- @param   r  Number       The red color value
--- @param   g  Number       The green color value
--- @param   b  Number       The blue color value
--- @return  h, s, v, a      The HSV representation
+-- @param r <tt>Number<0..1></tt> The red color value
+-- @param g <tt>Number<0..1></tt> The green color value
+-- @param b <tt>Number<0..1></tt> The blue color value
+-- @param a <tt>Number<0..1></tt> The alpha value
+-- @return <tt>(h, s, v, a)</tt> The HSV representation
 --
 function Lib.RGBtoHSV(r, g, b, a)
 	local hi, lo = max(r, g, b), min(r, g, b);
@@ -511,9 +522,10 @@ end
 --
 -- This function was not tested yet!
 --
--- @param   h  Number    The hue
--- @param   s  Number    The saturation
--- @param   v  Number    The value
+-- @param h <tt>Number<0..1></tt> The hue
+-- @param s <tt>Number<0..1></tt> The saturation
+-- @param v <tt>Number<0..1></tt> The value
+-- @param a <tt>Number<0..1></tt> The alpha value
 -- @return  r, g, b, a   The RGB representation
 --
 function Lib.HSVtoRGB(h, s, v, a)

@@ -1,6 +1,9 @@
 LUA=lua5.1
 
-all: test
+all: test docs
+
+clean: 
+	rm -R docs
 
 install-dependencies:
 	sudo luarocks install busted
@@ -11,4 +14,7 @@ test:
 test-only:
 	busted -t only
 
-.PHONY: all test test-only install-dependencies
+docs: LibColor.lua
+	luadoc -d docs LibColor.lua
+
+.PHONY: all clean test test-only install-dependencies
