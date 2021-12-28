@@ -44,7 +44,7 @@ if not Lib then return; end
 -- @class module
 --/
 
-local min, max = math.min, math.max;
+local min, max, floor = math.min, math.max, math.floor;
 
 local ColorStrings = {
 --  COLOR  = { R, G, B, A},
@@ -76,7 +76,7 @@ do -- mix in colors from PowerBarColor
 	ColorStrings.POWER_MANA = {.1, .2, 1, 1};
 end
 do -- mix in colors from RAID_CLASS_COLORS
-	for k,v in pairs(RAID_CLASS_COLORS) do
+	for k,v in pairs(RAID_CLASS_COLORS or {}) do
 		local tbl = {v[r], v[g], v[b], v[a] or 1};
 		ColorStrings["CLASS_"..tostring(k)] = tbl;
 	end
@@ -537,12 +537,12 @@ function Lib.HSVtoRGB(h, s, v, a)
 	local q = v * (1 - f * s);
 	local t = v * (1 - (1 - f) * s);
 
-	if i == 0 or i == 6 then   return v, t, p, a;
-	elseif i == 1 then         return q, v, p, a;
-	elseif i == 2 then         return p, v, t, a;
-	elseif i == 3 then         return p, q, v, a;
-	elseif i == 4 then         return t, p, v, a;
-	elseif i == 5 then         return v, p, q, a;
+	if i == 0 or i == 6 then return v, t, p, a;
+	elseif i == 1 then       return q, v, p, a;
+	elseif i == 2 then       return p, v, t, a;
+	elseif i == 3 then       return p, q, v, a;
+	elseif i == 4 then       return t, p, v, a;
+	elseif i == 5 then       return v, p, q, a;
 	end
 
 	return r, g, b, a;

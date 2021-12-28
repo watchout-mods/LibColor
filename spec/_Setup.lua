@@ -1,12 +1,3 @@
-PowerBarColor = {};
-RAID_CLASS_COLORS = {};
-
-floor = function(...)
-	print("FIXME: remove the call to this function, instead use math.floor");
-
-	return math.floor(...);
-end
-
 function strjoin(sep, ...)
 	print("TODO: avoid the call to this function");
 	local args = {...};
