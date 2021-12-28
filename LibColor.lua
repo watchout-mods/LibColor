@@ -106,8 +106,8 @@ end
 -- Blizzard color tables are of the form:
 --     { r = <0..1>, g = <0..1>, b = <0..1>[, a = <0..1>]}
 -- 
--- @return true if the given table is a valid Blizzard color table, false
--- otherwise.
+-- @return <tt>true</tt> if the given table is a valid Blizzard color table, <tt>false</tt>
+--         otherwise.
 local function isBlizColorTable(tbl)
 	if not tbl or type(tbl)~="table" or not tbl.r or not tbl.g or not tbl.b then
 		return false;
@@ -173,31 +173,29 @@ end
 -- Trims a value to the range <tt>0..1</tt>.
 -- 
 -- @param v the value to trim
--- @return if the value is in the range <0..1>,  or nil,  it will return exactly 
--- that value.  If the value is `< 0` it will return `0`,  if the value is `> 1` 
--- then it will return `1`.
-function Lib.TrimValue(v)
-	if v then
-		if v < 0 then
+-- @return if the <tt>value</tt> is <tt>nil</tt> or in the range <tt>(0..1)</tt>, then it will
+--         return exactly <tt>value</tt>. If <tt>value &lt; 0</tt>, it will return <tt>0</tt>, if
+--         <tt>value &gt; 1</tt>, then it will return <tt>1</tt>.
+function Lib.TrimValue(value)
+	if value then
+		if value < 0 then
 			return 0;
-		elseif v > 1 then 
+		elseif value > 1 then 
 			return 1;
 		end
 	end
-	return v;
+	return value;
 end
 
 ---
 -- Returns whether the given name represents a valid color.
 --
--- No color names containing special characters like accents, umlauts, etc. are
--- planned.
--- Color names contain only UPPER CASE characters A-Z, the character "_" or
--- numbers (no decimal point, comma, or whatever)
--- The name argument is currently automatically UPPER CASED, however this
--- behaviour may change to improve performance.
+-- No color names containing special characters like accents, umlauts, etc. are planned.
+-- 
+-- Predefined color names contain only UPPER CASE characters A-Z, the character "_" or numbers (no
+-- decimal point, comma, or whatever)
 --
--- Use Lib:GetColorNames() to get a list of (currently) valid names.
+-- Use <tt>Lib.GetColorNames()</tt> to get a list of (currently) valid names.
 function Lib.IsColorName(name)
 	return not not ColorStrings[name or ''];
 end
@@ -206,6 +204,9 @@ end
 -- Returns whether the given values represent a valid color list.
 --
 -- Alpha is optional and thus may be a number from 0 to 1 or false or nil.
+--
+-- @return <tt>true</tt> if the given parameters make up a valid color list, otherwise
+--         <tt>false</tt>.
 function Lib.IsColorList(R, G, B, A)
 	if (type(R) ~= "number") or (R*0~=0) or (R < 0) or (R > 1) then return false; end
 	if (type(G) ~= "number") or (G*0~=0) or (G < 0) or (G > 1) then return false; end
@@ -218,14 +219,16 @@ end
 ---
 -- Returns whether the given value/table is a valid color table.
 --
--- Color tables contain three or four numerically indexed items for values
--- <Red, Green, Blue, Alpha>, where individual values must range from 0 to 1 and
--- Alpha is optional and thus may be a number from 0 to 1 or false or nil.
--- The first item must be at index 1 and the table must be gapless - that means
--- color red is at index 1, green index 2, blue index 3 and alpha may or may not
--- exist but if it does, it is at index 4.
+-- Color tables contain three or four numerically indexed items for the individual RGB color
+-- channels - Red, Green, Blue and Alpha - where individual values must range from 0 to 1 and Alpha
+-- is optional and thus may be a number from 0 to 1 or false or nil.
+--
+-- The first item must be at index 1 and the table must be gapless - that means color red is at
+-- index 1, green index 2, blue index 3 and alpha may or may not exist but if it does, it is at
+-- index 4.
+--
 -- @param tbl the argument to test
--- @return true if the given parameter is a valid color table
+-- @return <tt>true</tt> if the given parameter is a valid color table, otherwise <tt>false</tt>.
 function Lib.IsColorTable(tbl)
 	if (not tbl) or (type(tbl) ~= "table") or (#tbl ~= 3 and #tbl ~= 4) then
 		return false;
@@ -238,8 +241,8 @@ end
 -- Returns whether the given value describes a color in any possible form.
 --
 -- @param ... any value
--- @return **true** if the given parameters can be interpreted as one of the
---         color types, **false** otherwise.
+-- @return <tt>true</tt> if the given parameters can be interpreted as one of the accepted input
+--         color types, <tt>false</tt> otherwise.
 function Lib.IsColor(...)
 	return isColorList(...) or isColorTable(...) or isColorName(...);
 end
@@ -247,12 +250,12 @@ end
 ---
 -- Blends between two colors and returns the blended color.
 --
--- @param col_from Color starting color
--- @param col_to   Color end color
+-- @param col_from <tt>Color</tt> starting color
+-- @param col_to   <tt>Color</tt> end color
 -- @param pos      Number may be any number from 0 to 1. 0 will return exactly
 --                 the "from" color, 1 will return exactly the color "to",
 --                 numbers in between are blended proportionally.
--- @return List style color (Red, Green, Blue, Alpha)
+-- @return <tt>(r, g, b, a)</tt> - an <tt>RGB[A]</tt> color list
 function Lib.BlendColor(col_from, col_to, pos)
 	local cfr, cfg, cfb, cfa = getColor(col_from);
 	local ctr, ctg, ctb, cta = getColor(col_to);
@@ -271,9 +274,9 @@ end
 ---
 -- Creates a function that blends between two colors using a linear blending.
 --
--- @param col_from Color starting color
--- @param col_to   Color end color
--- @return function (r,g,b,a = blender(frac))
+-- @param col_from <tt>Color</tt> starting color
+-- @param col_to   <tt>Color</tt> end color
+-- @return <tt>function (r,g,b,a = blender(frac))</tt>
 function Lib.CreateColorBlender(col_from, col_to)
 	local cfr, cfg, cfb, cfa = getColor(col_from);
 	local ctr, ctg, ctb, cta = getColor(col_to);
@@ -287,7 +290,7 @@ function Lib.CreateColorBlender(col_from, col_to)
 	-- @param pos Number<0..1> `0` will return exactly the "from" color supplied
 	--            to CreateColorBlender(...) and `1` will return exactly the
 	--            color "to". Numbers in between are blended proportionally.
-	-- @return List style color (Red, Green, Blue, Alpha)
+	-- @return <tt>(r, g, b, a)</tt> - an <tt>RGB[A]</tt> color list
 	local function blend(pos)
 		if not pos or type(pos) ~= "number" then
 			error(MAJOR.."::ColorBlender(...) argument 1 (pos) must be a number from 0 to 1. But is: "..tostring(pos));
@@ -304,8 +307,8 @@ end
 --
 -- NYT
 --
--- @param ... any value that can be passed to :GetColor(...)
--- @return r, g, b, a values
+-- @param ... a <tt>Color</tt> value that can be passed to :GetColor(...)
+-- @return <tt>(r, g, b, a)</tt> RGB[A] color list
 function Lib.Desaturate(...)
 	local r,g,b,a = getColor(...);
 	local l = (min(r,g,b)+max(r,g,b))/2;
@@ -322,8 +325,8 @@ end
 -- NYT
 --
 -- @param value Number<0..1> Where 0 means black and 1 means white.
--- @param ...   any value that can be passed to :GetColor(...)
--- @return r, g, b, a values
+-- @param ...   any <tt>Color</tt> value that can be passed to :GetColor(...)
+-- @return <tt>(r, g, b, a)</tt> RGB[A] color list
 function Lib.ModifyLuminosity_old(value, ...)
 	if type(value) ~= "number" then
 		argerr("ModifyLuminosity_old", 1, "number from 0 to 1", tostring(value));
@@ -343,8 +346,8 @@ end
 -- 
 -- NYT
 --
--- @param ... any value that can be passed to :GetColor(...)
--- @return r, g, b, a values
+-- @param ... any <tt>Color</tt> value that can be passed to :GetColor(...)
+-- @return <tt>(r, g, b, a)</tt> RGB[A] color list
 function Lib.GetLuminosity(...)
 	local r, g, b, a = getColor(...);
 	local hi, lo = max(r, g, b), min(r, g, b);
