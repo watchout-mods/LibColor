@@ -1,4 +1,4 @@
-local MAJOR, MINOR = "LibColor-1", 1;
+local MAJOR, MINOR = "LibColor-2", 1;
 local Lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
 if not Lib then return; end
 ---
@@ -108,12 +108,12 @@ end
 -- 
 -- @returns true if the given table is a valid Blizzard color table, false
 -- otherwise.
-local function isBlizColorTable(self, tbl)
+local function isBlizColorTable(tbl)
 	if not tbl or type(tbl)~="table" or not tbl.r or not tbl.g or not tbl.b then
 		return false;
 	end
 	
-	return isColorList(self, tbl.r, tbl.g, tbl.b, tbl.a);
+	return isColorList(tbl.r, tbl.g, tbl.b, tbl.a);
 end
 
 ---
@@ -130,7 +130,7 @@ end
 --            to this function
 --
 -- Color tables contain four numerically indexed items for values R, G, B, A
-function Lib:getColor(c, ...)
+function Lib.GetColor(c, ...)
 	--print(MAJOR, c, ...);
 	local input_t = type(c);
 	local argc = select('#', ...) + 1;
@@ -138,7 +138,7 @@ function Lib:getColor(c, ...)
 	
 	if input_t == "string" then
 		local cs = ColorStrings[c];
-		if cs and isColorTable(self, cs) then
+		if cs and isColorTable(cs) then
 			local alpha1 = ...
 			red, green, blue, alpha = unpack(cs);
 			-- TODO: Typecheck of alpha1
@@ -147,10 +147,10 @@ function Lib:getColor(c, ...)
 			end
 		end
 	elseif input_t == "table" then
-		if isColorTable(self, c) then
+		if isColorTable(c) then
 			red, green, blue, alpha = unpack(c);
 		end
-	elseif (argc == 4 or argc == 3) and isColorList(self, c, ...) then
+	elseif (argc == 4 or argc == 3) and isColorList(c, ...) then
 		red, green, blue, alpha = c, ...;
 	end
 	
@@ -166,7 +166,7 @@ end
 -- DEPRECATED. DO NOT USE.
 -- boolean = Lib:IsColorValue(...)
 -- 
-function Lib:IsColorValue(...)
+function Lib.IsColorValue(...)
 	error("DEPRECATED.");
 	for i=1, select("#", ...) do
 		local v = select(i, ...);
@@ -181,7 +181,7 @@ end
 -- @return if the value is in the range <0..1>,  or nil,  it will return exactly 
 -- that value.  If the value is `< 0` it will return `0`,  if the value is `> 1` 
 -- then it will return `1`.
-function Lib:TrimValue(v)
+function Lib.TrimValue(v)
 	if v then
 		if v < 0 then
 			return 0;
@@ -203,7 +203,7 @@ end
 -- behaviour may change to improve performance.
 --
 -- Use Lib:GetColorNames() to get a list of (currently) valid names.
-function Lib:IsColorName(name)
+function Lib.IsColorName(name)
 	return not not ColorStrings[name or ''];
 end
 
@@ -211,7 +211,7 @@ end
 -- boolean = Lib:IsColorList(Red, Green, Blue[, Alpha])
 -- Returns whether the given values represent a valid color list.
 -- Alpha is optional and thus may be a number from 0 to 1 or false or nil.
-function Lib:IsColorList(R, G, B, A)
+function Lib.IsColorList(R, G, B, A)
 	if (type(R) ~= "number") or (R*0~=0) or (R < 0) or (R > 1) then return false; end
 	if (type(G) ~= "number") or (G*0~=0) or (G < 0) or (G > 1) then return false; end
 	if (type(B) ~= "number") or (B*0~=0) or (B < 0) or (B > 1) then return false; end
@@ -232,12 +232,12 @@ end
 -- exist but if it does, it is at index 4.
 -- @param tbl the argument to test
 -- @return true if the given parameter is a valid color table
-function Lib:isColorTable(tbl)
+function Lib.IsColorTable(tbl)
 	if (not tbl) or (type(tbl) ~= "table") or (#tbl ~= 3 and #tbl ~= 4) then
 		return false;
 	end
 	
-	return isColorList(self, tbl[1], tbl[2], tbl[3], tbl[4]);
+	return isColorList(tbl[1], tbl[2], tbl[3], tbl[4]);
 end
 
 ---
@@ -245,8 +245,8 @@ end
 -- @param ... any value
 -- @return **true** if the given parameters can be interpreted as one of the
 -- color types, **false** otherwise.
-function Lib:IsColor(...)
-	return isColorList(self, ...) or isColorTable(self, ...) or isColorName(self, ...);
+function Lib.IsColor(...)
+	return isColorList(...) or isColorTable(...) or isColorName(...);
 end
 
 ---
@@ -259,9 +259,9 @@ end
 --             "from" color, 1 will return exactly the color "to", numbers in
 --             between are blended proportionally.
 -- @returns List style color (Red, Green, Blue, Alpha)
-function Lib:blendColor(col_from, col_to, pos)
-	local cfr, cfg, cfb, cfa = getColor(self, col_from);
-	local ctr, ctg, ctb, cta = getColor(self, col_to);
+function Lib.BlendColor(col_from, col_to, pos)
+	local cfr, cfg, cfb, cfa = getColor(col_from);
+	local ctr, ctg, ctb, cta = getColor(col_to);
 	if not cfr or not ctr then
 		error(MAJOR..":blendColor(...) one of arguments <1,2> is not a color.");
 	end
@@ -281,9 +281,9 @@ end
 -- @param from Color starting color
 -- @param to   Color end color
 -- @returns function (r,g,b,a = blender(frac))
-function Lib:createColorBlender(col_from, col_to)
-	local cfr, cfg, cfb, cfa = getColor(self, col_from);
-	local ctr, ctg, ctb, cta = getColor(self, col_to);
+function Lib.CreateColorBlender(col_from, col_to)
+	local cfr, cfg, cfb, cfa = getColor(col_from);
+	local ctr, ctg, ctb, cta = getColor(col_to);
 	local cdr, cdg, cdb, cda = ctr-cfr, ctg-cfg, ctb-cfb, cta-cfa;
 	if not cfr or not ctr then
 		error(MAJOR..":createColorBlender(...) one of arguments <1,2> is not a color.");
@@ -314,8 +314,8 @@ end
 --
 -- @param ... any value that can be passed to :GetColor(...)
 -- @return r, g, b, a values
-function Lib:Desaturate(...)
-	local r,g,b,a = getColor(self, ...);
+function Lib.Desaturate(...)
+	local r,g,b,a = getColor(...);
 	local l = (min(r,g,b)+max(r,g,b))/2;
 	
 	return l, l, l, a;
@@ -331,17 +331,17 @@ end
 -- @param value Number<0..1> Where 0 means black and 1 means white.
 -- @param ... any value that can be passed to :GetColor(...)
 -- @return r, g, b, a values
-function Lib:ModifyLuminosity_old(value, ...)
+function Lib.ModifyLuminosity_old(value, ...)
 	if type(value) ~= "number" then
 		argerr("ModifyLuminosity_old", 1, "number from 0 to 1", tostring(value));
 	end
-	local r,g,b,a = getColor(self, ...);
+	local r,g,b,a = getColor(...);
 	local low, high = min(r,g,b), max(r,g,b);
 	local lum = (low+high)/2;
 	if value > lum then
-		return blendColor(self, {r,g,b,a}, {getColor(self, "WHITE", a)}, (1-value)/(value-lum));
+		return blendColor({r,g,b,a}, {getColor("WHITE", a)}, (1-value)/(value-lum));
 	else
-		return blendColor(self, {getColor(self, "BLACK", a)}, {r,g,b,a}, lum/(lum-value));
+		return blendColor({getColor("BLACK", a)}, {r,g,b,a}, lum/(lum-value));
 	end
 end
 
@@ -352,8 +352,8 @@ end
 --
 -- @param ... any value that can be passed to :GetColor(...)
 -- @return r, g, b, a values
-function Lib:GetLuminosity(...)
-	local r, g, b, a = getColor(self, ...);
+function Lib.GetLuminosity(...)
+	local r, g, b, a = getColor(...);
 	local hi, lo = max(r, g, b), min(r, g, b);
 
 	return (hi + lo) / 2;
@@ -368,12 +368,12 @@ end
 --           value. The result is bounded by 0 .. 1.
 -- @param ... any value that can be passed to :GetColor(...)
 -- @return r, g, b, a values
-function Lib:ModifyLuminosity(factor, ...)
+function Lib.ModifyLuminosity(factor, ...)
 	if type(factor) ~= "number" or factor < 0 then
 		argerr("ModifyLuminosity", 1, "positive number or zero", tostring(factor));
 	end
-	local h,s,l,a = self.RGBtoHSL(getColor(self, ...));
-	return self.HSLtoRGB(h, s, max(1, l * factor), a);
+	local h,s,l,a = Lib.RGBtoHSL(getColor(...));
+	return Lib.HSLtoRGB(h, s, max(1, l * factor), a);
 end
 
 ---
@@ -384,12 +384,12 @@ end
 -- @param value Number<0..1> Where 0 means black and 1 means full hue.
 -- @param ... any value that can be passed to :GetColor(...)
 -- @return r, g, b, a values
-function Lib:SetLuminosity(value, ...)
+function Lib.SetLuminosity(value, ...)
 	if type(value) ~= "number" then
 		argerr("SetLuminosity", 1, "number from 0 to 1", tostring(value));
 	end
-	local h,s,l,a = self.RGBtoHSL(getColor(self, ...));
-	return self.HSLtoRGB(h, s, value, a);
+	local h,s,l,a = Lib.RGBtoHSL(getColor(...));
+	return Lib.HSLtoRGB(h, s, value, a);
 end
 
 ---
@@ -398,14 +398,14 @@ end
 -- 
 -- @param ... any value that can be passed to :GetColor(...)
 -- @return r, g, b, a values
-function Lib:GetColorForText(...)
-	local r,g,b,a = getColor(self, ...);
+function Lib.GetColorForText(...)
+	local r,g,b,a = getColor(...);
 	local low, high = min(r,g,b), max(r,g,b);
 	local lum = (low+high)/2;
 	if lum < .6666666 then
-		return getColor(self, "WHITE");
+		return getColor("WHITE");
 	else
-		return getColor(self, "DARKGREY");
+		return getColor("DARKGREY");
 	end
 end
 
@@ -552,19 +552,15 @@ function Lib.HSVtoRGB(h, s, v, a)
 end
 
 -- assign the functions to variables local-to-file for better performance
-getColor = Lib.getColor;
-blendColor = Lib.blendColor;
-createColorBlender = Lib.createColorBlender;
-isColorTable = Lib.isColorTable;
+getColor = Lib.GetColor;
+blendColor = Lib.BlendColor;
+createColorBlender = Lib.CreateColorBlender;
 
+isColorTable = Lib.IsColorTable;
 isColor = Lib.IsColor;
 isColorList = Lib.IsColorList;
 isColorName = Lib.IsColorName;
 
-Lib.GetColor = getColor;
-Lib.BlendColor = blendColor;
-Lib.CreateColorBlender = createColorBlender;
-Lib.IsColorTable = isColorTable;
 Lib.IsBlizColorTable = isBlizColorTable;
 
 --[[ ---------------------------------------------------------------------- ]]--

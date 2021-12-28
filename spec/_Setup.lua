@@ -28,4 +28,4 @@ end
 require("spec/LibStub");
 require("LibColor");
 
-return LibStub("LibColor-1");
+return LibStub("LibColor-2");
