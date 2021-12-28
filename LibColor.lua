@@ -160,21 +160,6 @@ function Lib.GetColor(c, ...)
 	return red, green, blue, alpha;
 end
 
-
-
----
--- DEPRECATED. DO NOT USE.
--- boolean = Lib:IsColorValue(...)
--- 
-function Lib.IsColorValue(...)
-	error("DEPRECATED.");
-	for i=1, select("#", ...) do
-		local v = select(i, ...);
-		if (not v) or (type(v)~="number") or v*0~=0 then return false; end
-	end
-	return true;
-end
-
 ---
 -- Trims a value to the range 0..1
 -- @param v the value to trim
