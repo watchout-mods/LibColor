@@ -1,5 +1,5 @@
-## Interface: 70000
-## Title: LibColor-1
+## Interface: 90105
+## Title: LibColor-2
 ## Version: @project-version@
 ## Notes: Library to simplify color operations and handling.
 ## Author: watchout [on curseforge.com]

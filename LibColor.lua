@@ -553,10 +553,10 @@ getColor = Lib.GetColor;
 blendColor = Lib.BlendColor;
 createColorBlender = Lib.CreateColorBlender;
 
-isColorTable = Lib.IsColorTable;
 isColor = Lib.IsColor;
 isColorList = Lib.IsColorList;
 isColorName = Lib.IsColorName;
+isColorTable = Lib.IsColorTable;
 
 Lib.IsBlizColorTable = isBlizColorTable;
 
