@@ -1,6 +1,3 @@
-local MAJOR, MINOR = "LibColor-2", 1;
-local Lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
-if not Lib then return; end
 ---
 -- LibColor provides a number of functions that operate on colors.
 -- With strong type checking, LibColor assures consistent return values and
@@ -10,14 +7,14 @@ if not Lib then return; end
 -- -----------
 --
 -- LibColor supports three variants of color representation in most functions:
---  ; Color list: A list of individual values for each color part (Red,  Green,
---    Blue and optionally Alpha)
---  ; Color name: A string representing a color name, like "PURPLE". These
---    values are pre-defined in the library. See *Color names* below.
---  ; Color table: A table representing an *array* of three (for RGB) or four
---    values (for RGBA). The table representation is restricted to the array
---    part for better performance (as opposed to the blizzard variant of
---    defining red, green and blue with string indexes ('r', 'g', 'b', 'a').
+--
+-- * __Color list__: A list of individual values for each color part (Red,  Green, Blue and
+--   optionally Alpha)
+-- * __Color name__: A string representing a color name, like "PURPLE". These values are pre-defined
+--   in the library. See *Color names* below.
+-- * __Color table__: A table representing an *array* of three (for RGB) or four values (for RGBA).
+--   The table representation is restricted to the array part for better performance (as opposed to
+--   the blizzard variant of defining red, green and blue with string indexes ('r', 'g', 'b', 'a').
 --
 -- Color names
 -- -----------
@@ -35,61 +32,63 @@ if not Lib then return; end
 -- other than preventing access to the table, I will here suggest a naming
 -- convention for those:
 -- 
---     '_' *ADDONNAME* '_' *COLORNAME*
+--     '_' ADDONNAME '_' COLORNAME
 -- 
 -- So grid might have it's custom color `BACKGROUND`. You would name it
 -- `_GRID_BACKGROUND`. This also means that this library will never declare a
 -- color starting with an underscore.
--- 
--- @class module
 --/
+local MAJOR, MINOR = "LibColor-2", 1;
+local Lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
+if not Lib then return; end
 
 local min, max, floor = math.min, math.max, math.floor;
 
-local ColorStrings = {
+local DefaultColors = {
 --  COLOR  = { R, G, B, A},
 	RED    = { 1, 0, 0, 1}, GREEN  = { 0, 1, 0, 1}, BLUE   = { 0, 0, 1, 1},
-	PURPLE = { 1, 0, 1, 1}, PINK   = { 1,.2,.7, 1}, YELLOW = { 1, 0, 1, 1},
+	PURPLE = { 1, 0, 1, 1}, PINK   = { 1,.2,.7, 1}, YELLOW = { 1, 1, 0, 1},
+	ORANGE = {.9,.6,.1, 1}, TEAL   = { 0, 1, 1, 1},
 	BLACK  = { 0, 0, 0, 1}, GREY   = {.5,.5,.5, 1}, WHITE  = { 1, 1, 1, 1}, 
 	GREY10 = {.1,.1,.1, 1}, GREY20 = {.2,.2,.2, 1}, GREY30 = {.3,.3,.3, 1},
 	GREY40 = {.4,.4,.4, 1}, GREY50 = {.5,.5,.5, 1}, GREY60 = {.6,.6,.6, 1},
 	GREY70 = {.7,.7,.7, 1}, GREY80 = {.8,.8,.8, 1}, GREY90 = {.9,.9,.9, 1},
 	DARKGREY   = {.2,.2,.2, 1}, LIGHTGREY  = {.8,.8,.8, 1},
 	DARKRED    = {.4, 0, 0, 1}, LIGHTRED   = { 1,.6,.6, 1},
-	DARKGREEN  = { 0,.4, 0, 1},
-	DARKBLUE   = { 0, 0,.4, 1},
+	DARKGREEN  = { 0,.4, 0, 1}, LIGHTGREEN = {.6, 1,.6, 1},
+	DARKBLUE   = { 0, 0,.4, 1}, LIGHTBLUE  = {.6,.6, 1, 1},
 	DARKPURPLE = {.4, 0,.4, 1},
 	HEALTH     = { 0, 1, 0, 1}, POWER_UNKNOWN = {.6,.6,.6, 1}, 
 }
-ColorStrings.GRAY = ColorStrings.GREY;
-ColorStrings.POWER_ = ColorStrings.POWER_UNKNOWN;
+DefaultColors.GRAY = DefaultColors.GREY;
+DefaultColors.POWER_ = DefaultColors.POWER_UNKNOWN;
 
 do -- mix in colors from PowerBarColor
 	for k,v in pairs(PowerBarColor or {}) do
 		if type(k) == "string" and v.r then
-			ColorStrings["POWER_"..k] = { v.r, v.g, v.b, 1 };
+			DefaultColors["POWER_"..k] = { v.r, v.g, v.b, 1 };
 		end
 	end
 	-- chi is called LIGHT_FORCE ... whatever
-	ColorStrings.POWER_CHI = ColorStrings.POWER_LIGHT_FORCE;
+	DefaultColors.POWER_CHI = DefaultColors.POWER_LIGHT_FORCE;
 	-- Make mana color a bit easier on the eye
-	ColorStrings.POWER_MANA = {.1, .2, 1, 1};
+	DefaultColors.POWER_MANA = {.1, .2, 1, 1};
 end
 do -- mix in colors from RAID_CLASS_COLORS
 	for k,v in pairs(RAID_CLASS_COLORS or {}) do
 		local tbl = {v[r], v[g], v[b], v[a] or 1};
-		ColorStrings["CLASS_"..tostring(k)] = tbl;
+		DefaultColors["CLASS_"..tostring(k)] = tbl;
 	end
 end
 
 -- mix color constants into the Lib
-for k,v in pairs(ColorStrings) do
+for k,v in pairs(DefaultColors) do
 	Lib[k] = v;
 end
-Lib.Colors = ColorStrings;
+Lib.Colors = DefaultColors;
 
 local getColor, blendColor, createColorBlender;
-local isColorTable, isColorList, isColorName, isColor;
+local isColorTable, isColorList, isColorName, isColor, isGray;
 local tostringall, strjoin = tostringall, strjoin;
 
 local function liberr(message, ...)
@@ -119,26 +118,23 @@ end
 ---
 -- Returns Red, Green, Blue and Alpha values from various input types.
 -- 
--- <ul>
---     <li><tt>r,g,b,a = Lib:GetColor(String [, Alpha])</tt> (See Lib.IsColorName(...))</li>
---     <li><tt>r,g,b,a = Lib:GetColor(ColorTable)</tt> (See Lib.IsColorTable(...))</li>
---     <li><tt>r,g,b,a = Lib:GetColor(Red, Green, Blue[, Alpha])</tt> (See Lib:IsColorList(...))</li>
--- </ul>
--- Possible input types are:
+-- * `r,g,b,a = Lib:GetColor(String [, Alpha])` (See `Lib.IsColorName`)
+-- * `r,g,b,a = Lib:GetColor(ColorTable)` (See `Lib.IsColorTable`
+-- * `r,g,b,a = Lib:GetColor(Red, Green, Blue[, Alpha])` (See `Lib.IsColorList`)
+--
+-- Possible parameter variants are:
 -- <dl>
---   <dt>String</dt><dd>any string that equals an available color constant. An
---       optional alpha value may be added.</dd>
---   <dt>Table</dt><dd>as by convention of :isColorTable function</dd>
---   <dt>List</dt><dd>a list of three or four real number values directly as
---       arguments to this function</dd>
+--   <dt>COLOR_NAME[, alpha]</dt><dd>A string containing a color name constant for which
+--   `Lib.IsColorName` would return `true`. An optional numerical alpha value in the range `0..1`
+--   may be added as second parameter.</dd>
+--   <dt>Color Table</dt><dd>an array-table of the form `{r, g, b, a}` that would be accepted by
+--   `Lib.IsColorTable`</dd>
+--   <dt>Color List</dt><dd>a list of three or four real number values `r, g, b[, a]` in the range
+--   `0..1` that would be accepted by `Lib.IsColorList`
+--   </dd>
 -- </dl>
--- 
--- Color tables contain four numerically indexed items for values R, G, B, A
--- 
--- @param c (r) color name, table or red color channel value of a color.
--- @param g     green color channel value (if c is a red value)
--- @param b     blue color channel value (if c is a red value)
--- @param a     alpha channel value (if c is a red value)
+-- @function Lib.GetColor(...)
+-- @param ... a <tt>Color</tt> value as defined above.that consists of either:
 function Lib.GetColor(c, ...)
 	--print(MAJOR, c, ...);
 	local input_t = type(c);
@@ -146,7 +142,7 @@ function Lib.GetColor(c, ...)
 	local red, green, blue, alpha;
 	
 	if input_t == "string" then
-		local cs = ColorStrings[c];
+		local cs = DefaultColors[c];
 		if cs and isColorTable(cs) then
 			local alpha1 = ...
 			red, green, blue, alpha = unpack(cs);
@@ -172,10 +168,10 @@ end
 ---
 -- Trims a value to the range <tt>0..1</tt>.
 -- 
--- @param v the value to trim
--- @return if the <tt>value</tt> is <tt>nil</tt> or in the range <tt>(0..1)</tt>, then it will
---         return exactly <tt>value</tt>. If <tt>value &lt; 0</tt>, it will return <tt>0</tt>, if
---         <tt>value &gt; 1</tt>, then it will return <tt>1</tt>.
+-- @param value the value to trim
+-- @return exactly <tt>value</tt> if the <tt>value</tt> is <tt>nil</tt> or in the range <tt>
+--  (0..1)</tt>. Otherwise, if <tt>value &lt; 0</tt>, returns <tt>0</tt> and if <tt>value &gt;
+--  1</tt>, returns <tt>1</tt>.
 function Lib.TrimValue(value)
 	if value then
 		if value < 0 then
@@ -197,7 +193,7 @@ end
 --
 -- Use <tt>Lib.GetColorNames()</tt> to get a list of (currently) valid names.
 function Lib.IsColorName(name)
-	return not not ColorStrings[name or ''];
+	return not not DefaultColors[name or ''];
 end
 
 ---
@@ -206,7 +202,7 @@ end
 -- Alpha is optional and thus may be a number from 0 to 1 or false or nil.
 --
 -- @return <tt>true</tt> if the given parameters make up a valid color list, otherwise
---         <tt>false</tt>.
+--  <tt>false</tt>.
 function Lib.IsColorList(R, G, B, A)
 	if (type(R) ~= "number") or (R*0~=0) or (R < 0) or (R > 1) then return false; end
 	if (type(G) ~= "number") or (G*0~=0) or (G < 0) or (G > 1) then return false; end
@@ -242,7 +238,7 @@ end
 --
 -- @param ... any value
 -- @return <tt>true</tt> if the given parameters can be interpreted as one of the accepted input
---         color types, <tt>false</tt> otherwise.
+--  color types, <tt>false</tt> otherwise.
 function Lib.IsColor(...)
 	return isColorList(...) or isColorTable(...) or isColorName(...);
 end
@@ -252,9 +248,8 @@ end
 --
 -- @param col_from <tt>Color</tt> starting color
 -- @param col_to   <tt>Color</tt> end color
--- @param pos      Number may be any number from 0 to 1. 0 will return exactly
---                 the "from" color, 1 will return exactly the color "to",
---                 numbers in between are blended proportionally.
+-- @param pos      Number may be any number from 0 to 1. 0 will return exactly the "from" color, 1
+--  will return exactly the color "to", numbers in between are blended proportionally.
 -- @return <tt>(r, g, b, a)</tt> - an <tt>RGB[A]</tt> color list
 function Lib.BlendColor(col_from, col_to, pos)
 	local cfr, cfg, cfb, cfa = getColor(col_from);
@@ -325,7 +320,7 @@ end
 -- NYT
 --
 -- @param value Number<0..1> Where 0 means black and 1 means white.
--- @param ...   any <tt>Color</tt> value that can be passed to :GetColor(...)
+-- @param ... any <tt>Color</tt> value that can be passed to :GetColor(...)
 -- @return <tt>(r, g, b, a)</tt> RGB[A] color list
 function Lib.ModifyLuminosity_old(value, ...)
 	if type(value) ~= "number" then
@@ -360,8 +355,8 @@ end
 -- 
 -- NYT
 --
--- @param factor Number<0 .. inf.> a factor that is applied to the luminosity
---           value. The result is bounded by 0 .. 1.
+-- @param factor Number<0 .. inf.> a factor that is applied to the luminosity value. The result is
+--  bounded by 0 .. 1.
 -- @param ... any value that can be passed to :GetColor(...)
 -- @return r, g, b, a values
 function Lib.ModifyLuminosity(factor, ...)

@@ -1,5 +1,7 @@
-describe("Color conversion function", function()
+describe("Color conversion functions", function()
 	local lib = require("spec/_Setup");
+	local getColor = lib.GetColor;
+	local err_threshold = 0.01;
 
 	-- samples taken from https://color.adobe.com/create/color-wheel/
 	-- "HSB" equals "HSV" here
@@ -12,7 +14,12 @@ describe("Color conversion function", function()
 		}
 	}
 
-	it("converts correctly from CMYK to RGB", function()
-		-- Function does not actually exist yet...
-	end)
+	describe("for HSV", function()
+		it("convert from RGB and back within margin of error", function()
+			assert.are.near({getColor("TEAL")}, {lib.HSVtoRGB(lib.RGBtoHSV(getColor("TEAL")))}, 0.01)
+			assert.are.near({getColor("RED")}, {lib.HSVtoRGB(lib.RGBtoHSV(getColor("RED")))}, 0.01)
+			assert.are.near({.25, .24, .23, 1}, {lib.HSVtoRGB(lib.RGBtoHSV(.25, .24, .23, 1))}, 0.01)
+			assert.are.near({.95, .24, .23, 1}, {lib.HSVtoRGB(lib.RGBtoHSV(.95, .24, .23, 1))}, 0.01)
+		end)
+	end);
 end)
