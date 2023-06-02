@@ -17,4 +17,6 @@ test-only:
 docs: LibColor.lua
 	luadoc -d docs LibColor.lua
 
-.PHONY: all clean test test-only install-dependencies
+docs: LibColor.lua .ldoc/config.ld .ldoc/ldoc.css .ldoc/ldoc.ltp
+	ldoc --format=markdown --config=.ldoc/config.ld -d docs LibColor.lua
+
