@@ -240,7 +240,7 @@ end
 -- @return <tt>true</tt> if the given parameters can be interpreted as one of the accepted input
 --  color types, <tt>false</tt> otherwise.
 function Lib.IsColor(...)
-	return isColorList(...) or isColorTable(...) or isColorName(...);
+	return isColorName(...) or isColorList(...) or isColorTable(...);
 end
 
 ---
