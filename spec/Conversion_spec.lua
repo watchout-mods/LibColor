@@ -1,7 +1,7 @@
 describe("Color conversion functions", function()
 	local lib = require("spec/_Setup");
 	local getColor = lib.GetColor;
-	local err_threshold = 0.01;
+	local error_threshold = 0.0001;
 
 	-- samples taken from https://color.adobe.com/create/color-wheel/
 	-- "HSB" equals "HSV" here
@@ -14,12 +14,18 @@ describe("Color conversion functions", function()
 		}
 	}
 
+	function assert_color_near(expect, actual, err)
+		for k,v in pairs(actual) do
+			assert.are.near(expect[k], actual[k], err);
+		end
+	end
+
 	describe("for HSV", function()
 		it("convert from RGB and back within margin of error", function()
-			assert.are.near({getColor("TEAL")}, {lib.HSVtoRGB(lib.RGBtoHSV(getColor("TEAL")))}, 0.01)
-			assert.are.near({getColor("RED")}, {lib.HSVtoRGB(lib.RGBtoHSV(getColor("RED")))}, 0.01)
-			assert.are.near({.25, .24, .23, 1}, {lib.HSVtoRGB(lib.RGBtoHSV(.25, .24, .23, 1))}, 0.01)
-			assert.are.near({.95, .24, .23, 1}, {lib.HSVtoRGB(lib.RGBtoHSV(.95, .24, .23, 1))}, 0.01)
+			local exp = {getColor("TEAL")}; assert_color_near(exp, {lib.HSVtoRGB(lib.RGBtoHSV(unpack(exp)))}, error_threshold);
+			local exp = {getColor("RED") }; assert_color_near(exp, {lib.HSVtoRGB(lib.RGBtoHSV(unpack(exp)))}, error_threshold);
+			local exp = {.25, .24, .23, 1}; assert_color_near(exp, {lib.HSVtoRGB(lib.RGBtoHSV(unpack(exp)))}, error_threshold);
+			local exp = {.95, .24, .23, 1}; assert_color_near(exp, {lib.HSVtoRGB(lib.RGBtoHSV(unpack(exp)))}, error_threshold);
 		end)
 	end);
 end)
