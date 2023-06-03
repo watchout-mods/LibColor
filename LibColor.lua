@@ -600,6 +600,42 @@ function Lib.HSVtoRGB(h, s, v, a)
 	return r, g, b, a;
 end
 
+---
+-- Convert ths given color value to a Hex-Representation usable for example in HTML
+--
+-- @param r <tt>Number<0..1></tt> The red color value
+-- @param g <tt>Number<0..1></tt> The green color value
+-- @param b <tt>Number<0..1></tt> The blue color value
+-- @param a <tt>Number<0..1></tt> The alpha value
+-- @return <tt>string</tt> color represenation using 2-character hexadecimal values in order RRGGBB
+--   or RRGGBBAA if alpha has a value.
+--
+function Lib.ToHex(r, g, b, a)
+	if a then
+		return ("%.2x%.2x%.2x%.2x"):format(r * 255, g * 255, b * 255, a * 255);
+	else
+		return ("%.2x%.2x%.2x"):format(r * 255, g * 255, b * 255);
+	end
+end
+
+---
+-- Convert ths given color value to a representation usable in CSS
+--
+-- @param r <tt>Number<0..1></tt> The red color value
+-- @param g <tt>Number<0..1></tt> The green color value
+-- @param b <tt>Number<0..1></tt> The blue color value
+-- @param a <tt>Number<0..1></tt> The alpha value
+-- @return <tt>string</tt> color represenation usable in CSS style definitions that accept a color
+--   argument.
+--
+function Lib.ToCSS(r, g, b, a)
+	if a then
+		return ("rgba(%f,%f,%f,%f)"):format(r * 255, g * 255, b * 255, a * 255);
+	else
+		return ("rgb(%f,%f,%f,%f)"):format(r * 255, g * 255, b * 255);
+	end
+end
+
 -- assign the functions to variables local-to-file for better performance
 getColor = Lib.GetColor;
 blendColor = Lib.BlendColor;
