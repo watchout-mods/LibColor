@@ -38,7 +38,7 @@
 -- `_GRID_BACKGROUND`. This also means that this library will never declare a
 -- color starting with an underscore.
 --/
-local MAJOR, MINOR = "LibColor-2", 1;
+local MAJOR, MINOR = "LibColor-2", 2;
 local Lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
 if not Lib then return; end
 
