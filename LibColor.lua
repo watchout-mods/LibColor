@@ -244,6 +244,17 @@ function Lib.IsColor(...)
 end
 
 ---
+-- Returns whether the given color is on the gray scale (from white through the gray shades to
+-- black)
+--
+-- @param ... `Color` value
+-- @return <tt>true</tt> if the given color is grayscale.
+function Lib.IsGray(...)
+	local r, g, b = getColor(...);
+	return r == g and g == b;
+end
+
+---
 -- Blends between two colors and returns the blended color.
 --
 -- @param col_from <tt>Color</tt> starting color
@@ -293,6 +304,49 @@ function Lib.CreateColorBlender(col_from, col_to)
 		if pos < 0 then pos = 0; end;
 		if pos > 1 then pos = 1; end;
 		return cfr + cdr*pos, cfg + cdg*pos, cfb + cdb*pos, cfa + cda*pos;
+	end
+	return blend;
+end
+
+
+---
+-- Creates a function that blends between two colors using a linear blending in a cylindrical color
+-- space.
+--
+-- This function will only work correctly if the angle has a value in the range of 0..1 and is the
+-- first return value of `rgb_from` and the first parameter to `rgb_to`.
+--
+-- @param rgb_from `Function` that converts _from_ `RGB` _to_ the calculation color space
+-- @param rgb_to   `Function` that converts _to_ `RGB` _from_ the calculation color space
+-- @param col_from `Color` starting color
+-- @param col_to   `Color` end color
+-- @return a `function (r,g,b,a = blender(frac))` that accepts exactly one numeric parameter in the
+--   range `0..1` and which when passed `0` will return exactly `col_from` and when passed `1` will
+--   return exactly `color_to`. Numbers in between are interpolated proportionally using a linear
+--   function.
+function Lib.CreateHueBlender(rgb_from, rgb_to, col_from, col_to)
+	local cfr, cfx, cfy, cfa = rgb_from(getColor(col_from));
+	local ctr, ctx, cty, cta = rgb_from(getColor(col_to));
+	if isGray(col_from) then
+		cfr = ctr;
+	elseif isGray(col_to) then
+		ctr = cfr;
+	end
+	local cdr, cdx, cdy, cda = ctr-cfr, ctx-cfx, cty-cfy, cta-cfa;
+	if not cfr then
+		argerr("CreateHueBlender", 3, "color value", tostring(cfr));
+	end
+	if not ctr then
+		argerr("CreateHueBlender", 4, "color value", tostring(ctr));
+	end
+
+	local function blend(pos)
+		if not pos or type(pos) ~= "number" then
+			error(MAJOR.."::HueColorBlender(...) argument 1 (pos) must be a number from 0 to 1. But is: "..tostring(pos));
+		end
+		if pos < 0 then pos = 0; end;
+		if pos > 1 then pos = 1; end;
+		return rgb_to(cfr + cdr*pos, cfx + cdx*pos, cfy + cdy*pos, cfa + cda*pos);
 	end
 	return blend;
 end
@@ -555,6 +609,7 @@ isColor = Lib.IsColor;
 isColorList = Lib.IsColorList;
 isColorName = Lib.IsColorName;
 isColorTable = Lib.IsColorTable;
+isGray = Lib.IsGray;
 
 Lib.IsBlizColorTable = isBlizColorTable;
 
